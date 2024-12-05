@@ -1,0 +1,33 @@
+{
+    "name": "voucherly/voucherly-php-sdk",
+    "description": "Voucherly PHP SDK",
+    "license": "MIT",
+    "keywords": [
+      "voucherly",
+      "buoni pasto",
+      "api",
+      "php",
+      "sdk"
+    ],
+    "homepage": "https://www.voucherly.it",
+    "authors": [
+      {
+        "name": "Voucherly",
+        "homepage": "https://github.com/voucherly/voucherly-php-sdk"
+      }
+    ],
+    "require": {
+      "php": ">=5.4.0",
+      "ext-curl": "*",
+      "ext-json": "*",
+      "ext-mbstring": "*"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.65"
+    },
+    "autoload": {
+      "psr-4": {
+        "VoucherlyApi\\": "src/"
+      }
+    }
+}
