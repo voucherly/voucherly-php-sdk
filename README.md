@@ -1,6 +1,10 @@
 # Voucherly PHP SDK
 
-The official [Voucherly][voucherly] .NET library, supporting .NET 6.0+.
+[![Latest Stable Version](https://poser.pugx.org/voucherly/voucherly-php-sdk/v/stable.svg)](https://packagist.org/packages/voucherly/voucherly-php-sdk)
+[![Total Downloads](https://poser.pugx.org/voucherly/voucherly-php-sdk/downloads.svg)](https://packagist.org/packages/voucherly/voucherly-php-sdk)
+[![License](https://poser.pugx.org/voucherly/voucherly-php-sdk/license.svg)](https://packagist.org/packages/voucherly/voucherly-php-sdk)
+
+The official [Voucherly][voucherly] PHP library, supporting PHP 5.6.0 and later.
 
 
 ## Requirements
