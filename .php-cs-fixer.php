@@ -2,7 +2,7 @@
 
 $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__)
-    ->notPath('tests/TestCase.php');
+    ->notPath('vendor');
 
 $config = new PhpCsFixer\Config();
 $config->setRiskyAllowed(true);
