@@ -6,6 +6,7 @@ class CreatePaymentRequest
 {
     public string $mode = 'Payment';
     public ?string $referenceId = null;
+    public ?string $customerPaymentMethodId = null;
     public ?string $customerId = null;
     public string $customerEmail = '';
     public string $customerFirstName = '';
