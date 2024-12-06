@@ -17,4 +17,6 @@ class CreatePaymentRequestLine
     public string $productImage = '';
 
     public bool $isFood = false;
+
+    public ?float $taxRate = null;
 }

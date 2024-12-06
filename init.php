@@ -11,4 +11,3 @@ require __DIR__ . '/lib/Payment/CreatePayment/CreatePaymentRequestDiscount.php';
 require __DIR__ . '/lib/Payment/CreatePayment/CreatePaymentRequestLine.php';
 
 require __DIR__ . '/lib/PaymentGateway/PaymentGateway.php';
-
