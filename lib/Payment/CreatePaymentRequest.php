@@ -19,22 +19,10 @@ class CreatePaymentRequest
      * @var string
      */
     public $redirectKoUrl = '';
-    /**
-     * @var string
-     */
-    public $callbackUrl = '';
-    /**
-     * @var string
-     */
-    public $language = '';
-    /**
-     * @var string
-     */
-    public $country = '';
-    /**
-     * @var string
-     */
-    public $shippingAddress = '';
+    public ?string $callbackUrl = null;
+    public ?string $language = null;
+    public ?string $country = null;
+    public ?string $shippingAddress = null;
 
     public $metadata = [];
 
