@@ -6,10 +6,12 @@ class Api
 {
     private static $env = 'production';
     private static $apiKey;
-    private static $version = '1.0.0';
+    private static $version = '1.2.0';
     private static $osNameHeader;
     private static $osVersionHeader;
+    private static $osFrameworkHeader;
     private static $appVersionHeader;
+    private static $appHouseHeader;
     private static $appNameHeader;
     private static $typeHeader;
 
@@ -91,6 +93,26 @@ class Api
     }
 
     /**
+     * Get platform framework header.
+     *
+     * @return string
+     */
+    public static function getOsFrameworkHeader()
+    {
+        return self::$osFrameworkHeader;
+    }
+
+    /**
+     * Set platform framework header.
+     *
+     * @param string $value
+     */
+    public static function setOsFrameworkHeader($value)
+    {
+        self::$osFrameworkHeader = $value;
+    }
+
+    /**
      * Get plugin name header.
      *
      * @return string
@@ -128,6 +150,27 @@ class Api
     public static function setAppVersionHeader($value)
     {
         self::$appVersionHeader = $value;
+    }
+
+
+    /**
+     * Get plugin house header.
+     *
+     * @return string
+     */
+    public static function getAppHouseHeader()
+    {
+        return self::$appHouseHeader;
+    }
+
+    /**
+     * Set plugin house header.
+     *
+     * @param string $value
+     */
+    public static function setAppHouseHeader($value)
+    {
+        self::$appHouseHeader = $value;
     }
 
     /**
