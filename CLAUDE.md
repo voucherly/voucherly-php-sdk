@@ -104,4 +104,4 @@ An automatic update reads the spec from GitHub at the commit that triggered it, 
 - Commits in English, in the imperative, on one line, with no `Co-Authored-By` or any other reference to AI.
 - No commit, stage, tag or push unless Francesco asks for it.
 - A field removed or renamed, or a method whose signature changes, is a major release.
-- Packagist publishes a release when its tag is pushed. Bump `VoucherlyClient::VERSION` and `CHANGELOG.md` first: a test checks that they agree.
+- A release is a pushed tag `vX.Y.Z`, as in the .NET SDK. Bump `VoucherlyClient::VERSION` and add the `## X.Y.Z - date` section to `CHANGELOG.md` first: a test checks that they agree. Packagist publishes the tag on its own, and `.github/workflows/release.yml` checks the tag against the version and the changelog, runs the CI and creates the GitHub release with the notes of that section. Never create a GitHub release by hand.

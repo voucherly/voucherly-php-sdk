@@ -2,7 +2,7 @@
 
 ## 2.0.0 - 2026-10-01
 
-Rewritten from the OpenAPI spec of the Voucherly API, as published on 2026-10-01. The upgrade from 1.x is described in [UPGRADE-2.0.md](UPGRADE-2.0.md).
+Rewritten from the OpenAPI spec of the Voucherly API, as published on 2026-10-01. The upgrade from 1.x is described in [UPGRADE-2.0.md](https://github.com/voucherly/voucherly-php-sdk/blob/main/UPGRADE-2.0.md).
 
 - Every public operation of the API: 43 operations over companies, customers and their addresses, wallet and prepaid balance, payment methods, payments, receipts, terminals, stores, concept stores, store areas, payment gateways and the volumes report.
 - `VoucherlyClient`, created with an array of options, replaces the static `Api` configuration, so one process can use more than one key.
