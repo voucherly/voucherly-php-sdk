@@ -13,9 +13,9 @@ on:
   schedule:
     - cron: '17 6 * * 1'
 
+# The branch and the pull request go through SDK_TOKEN, an organization secret: the organization forbids GITHUB_TOKEN to open pull requests, and a pull request opened with GITHUB_TOKEN would not start the CI.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: sync-api
@@ -25,10 +25,12 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ github.token }}
+      GH_TOKEN: ${{ secrets.SDK_TOKEN }}
       DOCS_REF: ${{ github.event.client_payload.sha || inputs.sha || 'main' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.SDK_TOKEN }}
 
       - name: Choose the branch
         run: |
@@ -141,8 +143,6 @@ jobs:
             echo "- [ ] add or remove the service methods, their entries in \`spec/coverage.json\` and their tests, for the operations listed above"
             echo "- [ ] bump \`VoucherlyClient::VERSION\` and add the section to \`CHANGELOG.md\`"
             echo "- [ ] run the live tests against the sandbox"
-            echo
-            echo "The CI does not start on a pull request opened by this workflow: the checks above are the ones it ran."
             echo
             echo "<details><summary>Changes to the spec</summary>"
             echo
