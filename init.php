@@ -1,13 +1,13 @@
 <?php
 
-require __DIR__ . '/lib/Api.php';
-require __DIR__ . '/lib/NotSuccessException.php';
-require __DIR__ . '/lib/Request.php';
-require __DIR__ . '/lib/PaymentHelper.php';
+spl_autoload_register(static function (string $class): void {
+    $prefix = 'VoucherlyApi\\';
+    if (0 !== strncmp($class, $prefix, \strlen($prefix))) {
+        return;
+    }
 
-require __DIR__ . '/lib/Payment/Payment.php';
-require __DIR__ . '/lib/Payment/CreatePayment/CreatePaymentRequest.php';
-require __DIR__ . '/lib/Payment/CreatePayment/CreatePaymentRequestDiscount.php';
-require __DIR__ . '/lib/Payment/CreatePayment/CreatePaymentRequestLine.php';
-
-require __DIR__ . '/lib/PaymentGateway/PaymentGateway.php';
+    $file = __DIR__ . '/lib/' . str_replace('\\', '/', substr($class, \strlen($prefix))) . '.php';
+    if (is_file($file)) {
+        require $file;
+    }
+});

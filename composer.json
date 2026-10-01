@@ -3,31 +3,46 @@
     "description": "Voucherly PHP SDK",
     "license": "MIT",
     "keywords": [
-      "voucherly",
-      "buoni pasto",
-      "api",
-      "php",
-      "sdk"
+        "voucherly",
+        "buoni pasto",
+        "api",
+        "php",
+        "sdk"
     ],
     "homepage": "https://www.voucherly.it",
     "authors": [
-      {
-        "name": "Voucherly",
-        "homepage": "https://github.com/voucherly/voucherly-php-sdk"
-      }
+        {
+            "name": "Voucherly",
+            "homepage": "https://github.com/voucherly/voucherly-php-sdk"
+        }
     ],
     "require": {
-      "php": ">=5.6.0",
-      "ext-curl": "*",
-      "ext-json": "*",
-      "ext-mbstring": "*"
+        "php": ">=7.4",
+        "ext-curl": "*",
+        "ext-json": "*"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.65"
+        "friendsofphp/php-cs-fixer": "^3.65",
+        "phpunit/phpunit": "^9.6",
+        "symfony/yaml": "^5.4 || ^6.4 || ^7.0"
     },
     "autoload": {
-      "psr-4": {
-        "VoucherlyApi\\": "lib/"
-      }
+        "psr-4": {
+            "VoucherlyApi\\": "lib/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "VoucherlyApi\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "coverage": "php tools/check-coverage.php",
+        "format": "php-cs-fixer fix",
+        "format:check": "php-cs-fixer fix --dry-run --diff"
+    },
+    "config": {
+        "sort-packages": true
     }
 }
