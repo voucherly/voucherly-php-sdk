@@ -28,7 +28,7 @@ jobs:
       GH_TOKEN: ${{ secrets.SDK_TOKEN }}
       DOCS_REF: ${{ github.event.client_payload.sha || inputs.sha || 'main' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.SDK_TOKEN }}
 
