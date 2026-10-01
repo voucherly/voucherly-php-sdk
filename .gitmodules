@@ -1,0 +1,3 @@
+[submodule "claude-rules"]
+	path = claude-rules
+	url = https://fbognini@dev.azure.com/fbognini/SberemPay/_git/voucherly-conventions
