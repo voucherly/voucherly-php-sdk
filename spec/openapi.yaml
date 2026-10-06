@@ -887,7 +887,11 @@ paths:
               As credit:
                 summary: Refund the whole Payment into the customer's wallet
                 value:
-                  asCredit: true
+                  refundMode: Credit
+              Gateway or credit:
+                summary: Refund through the gateway, into the customer's wallet where the gateway refuses
+                value:
+                  refundMode: GatewayOrCredit
               Single transaction:
                 summary: Refund part of one transaction
                 value:
@@ -3970,7 +3974,10 @@ components:
           description: The part of `finalAmount` that meal vouchers can pay, in cents. Requires `finalAmount`, and can't be higher than it.
           nullable: true
         refundMode:
-          $ref: '#/components/schemas/Payments.RefundMode'
+          allOf:
+            - $ref: '#/components/schemas/Payments.RefundMode'
+          description: How money already captured is given back when the confirmed amounts are lower than what was captured. Only with `lines`, or with `finalAmount` and `foodAmount`. Defaults to `NoRefund`.
+          nullable: true
       additionalProperties: false
     ConfirmPaymentRequest.Line:
       type: object
@@ -4014,11 +4021,11 @@ components:
       additionalProperties: false
     Payments.RefundMode:
       description: |
-        How money already captured is given back when the confirmed amounts are lower than what was captured. Authorizations are never refunded: they are captured partially or voided.
-        - `NoRefund` (default): nothing is given back, and the request fails with `REFUND_REQUIRED` without touching any transaction.
-        - `Gateway`: refunded through the payment gateway. When its configuration forbids a partial refund, the request fails before touching any transaction; when the gateway itself refuses the refund it has already been asked for, the captures of this confirmation are done and `operations` lists them.
-        - `Credit`: credited to the customer's wallet, without calling the gateway. A credit coming from meal vouchers can be spent only on food.
-        - `GatewayOrCredit`: refunded through the gateway where it allows it, credited to the wallet otherwise.
+        How money already captured is given back, on a confirmation at lower amounts and on a refund. Authorizations are never refunded: they are captured partially or voided.
+        - `NoRefund`: nothing is given back. The default of a confirmation, which then fails with `REFUND_REQUIRED` without touching any transaction; not accepted by a refund.
+        - `Gateway`: refunded through the payment gateway, the default of a refund. When its configuration forbids a partial refund, the request fails before touching any transaction; when the gateway itself refuses the refund it has already been asked for, the operations already done stay done and `operations` lists them.
+        - `Credit`: credited to the customer's wallet, without calling the gateway. A credit coming from meal vouchers can be spent only on food. Not accepted on a wallet top-up.
+        - `GatewayOrCredit`: refunded through the gateway where it allows it, credited to the wallet otherwise, also when the gateway refuses the refund. Not accepted on a wallet top-up.
       enum:
         - NoRefund
         - Gateway
@@ -4038,17 +4045,19 @@ components:
           description: If specified, is the partial amount to be refunded.
           format: int32
           nullable: true
-        asCredit:
-          type: boolean
-          description: Indicates whether the refunded amount should be added to the customer's wallet as credit.
+        refundMode:
+          allOf:
+            - $ref: '#/components/schemas/Payments.RefundMode'
+          description: How this transaction is given back, when the request sets no `refundMode` of its own. Defaults to `Gateway`; `NoRefund` fails with `VALIDATION_ERROR`.
           nullable: true
       additionalProperties: false
     RefundPaymentRequest:
       type: object
       properties:
-        asCredit:
-          type: boolean
-          description: Indicates whether the refunded amount should be added to the customer's wallet as credit.
+        refundMode:
+          allOf:
+            - $ref: '#/components/schemas/Payments.RefundMode'
+          description: How every transaction is given back, overriding the `refundMode` of each one. Defaults to `Gateway`; `NoRefund` fails with `VALIDATION_ERROR`.
           nullable: true
         transactions:
           type: array
