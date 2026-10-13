@@ -77,7 +77,7 @@ tags:
     x-displayName: Store Areas
   - name: reports
     description: |
-      Reports expose aggregated analytics over your Payments. The volumes report returns turnover broken down by PaymentGateway (and optionally by Store) for a given date range, together with the grand totals across all rows. It mirrors the Volumes report available in the Voucherly Dashboard.
+      Reports expose aggregated analytics over your Payments. The volumes report returns turnover broken down by PaymentGateway (and optionally by Store) for a given date range, together with the grand totals across all rows, including the meal vouchers confirmed and refunded. It mirrors the Volumes report available in the Voucherly Dashboard.
     x-displayName: Reports
 paths:
   /v1/companys:
@@ -197,6 +197,13 @@ paths:
                   lastName: Rossi
                   options:
                     requireUniqueEmail: true
+              Reference:
+                summary: Create a customer identified by your own user ID
+                value:
+                  email: mario.rossi@voucherly.it
+                  firstName: Mario
+                  lastName: Rossi
+                  referenceId: user-4821
         required: true
       responses:
         '201':
@@ -207,6 +214,27 @@ paths:
                 $ref: '#/components/schemas/Customer'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Another Customer already has the email address, when `requireUniqueEmail` is true, or the `referenceId`. `customerId` is the ID of that Customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerConflictProblemDetails'
+              examples:
+                EmailAlreadyExists:
+                  value:
+                    title: You can't create the customer because of a conflict.
+                    status: 409
+                    detail: Customer mario.rossi@voucherly.it already exists.
+                    code: EMAIL_ALREADY_EXISTS
+                    customerId: cs_5vY3nKp8QwR
+                ReferenceIdAlreadyExists:
+                  value:
+                    title: You can't create the customer because of a conflict.
+                    status: 409
+                    detail: Another Customer already has this ReferenceId.
+                    code: REFERENCE_ID_ALREADY_EXISTS
+                    customerId: cs_5vY3nKp8QwR
     get:
       tags:
         - customer
@@ -218,12 +246,17 @@ paths:
           in: query
           schema:
             type: string
+        - name: referenceId
+          description: The ID of the Customer in your own system, as set in `referenceId`.
+          in: query
+          schema:
+            type: string
         - $ref: '#/components/parameters/PageSizeQueryParam'
         - $ref: '#/components/parameters/PageStartQueryParam'
       responses:
         '200':
           description: |
-            A dictionary with a `items` property that contains an array of up to `length` Customers, starting after Customer `start`. Passing an optional email will result in filtering to Customers with only that exact email address. Each entry in the array is a separate Customer object. If no more Customers are available, the resulting array will be empty.
+            A dictionary with a `items` property that contains an array of up to `length` Customers, starting after Customer `start`. Passing an optional email or referenceId will result in filtering to Customers with only that exact email address or reference. Each entry in the array is a separate Customer object. If no more Customers are available, the resulting array will be empty.
           content:
             application/json:
               schema:
@@ -292,6 +325,20 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: Another Customer already has the `referenceId`. `customerId` is the ID of that Customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerConflictProblemDetails'
+              examples:
+                ReferenceIdAlreadyExists:
+                  value:
+                    title: You can't update the customer because of a conflict.
+                    status: 409
+                    detail: Another Customer already has this ReferenceId.
+                    code: REFERENCE_ID_ALREADY_EXISTS
+                    customerId: cs_5vY3nKp8QwR
   /v1/customers/{customerId}/payment_methods:
     get:
       tags:
@@ -548,9 +595,10 @@ paths:
                   mode: Payment
                   redirectOkUrl: https://httpbin.org/get
                   redirectKoUrl: https://httpbin.org/get
-                  customerFirstName: Mario
-                  customerLastName: Rossi
-                  customerEmail: mario.rossi@voucherly.it
+                  customer:
+                    firstName: Mario
+                    lastName: Rossi
+                    email: mario.rossi@voucherly.it
                   country: IT
                   lines:
                     - quantity: 2
@@ -587,6 +635,24 @@ paths:
                   discounts:
                     - discountName: Coupon XSDWFE
                       amount: 200
+              Customer from your system:
+                summary: Create payment for a customer identified by your own user ID
+                value:
+                  mode: Payment
+                  customer:
+                    referenceId: user-4821
+                    firstName: Mario
+                    lastName: Rossi
+                    email: mario.rossi@voucherly.it
+                  redirectOkUrl: https://httpbin.org/get
+                  redirectKoUrl: https://httpbin.org/get
+                  lines:
+                    - quantity: 1
+                      unitAmount: 250
+                      product:
+                        externalId: SKU-MUFFIN-001
+                        name: Muffin
+                        lineType: Food
               New store:
                 summary: Create payment on a store identified by your own ids
                 value:
@@ -744,9 +810,10 @@ paths:
                   mode: Wallet
                   redirectOkUrl: https://httpbin.org/get
                   redirectKoUrl: https://httpbin.org/get
-                  customerFirstName: Mario
-                  customerLastName: Rossi
-                  customerEmail: mario.rossi@voucherly.it
+                  customer:
+                    firstName: Mario
+                    lastName: Rossi
+                    email: mario.rossi@voucherly.it
                   country: IT
       responses:
         '201':
@@ -756,7 +823,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/Payment'
         '400':
-          $ref: '#/components/responses/BadRequest'
+          $ref: '#/components/responses/CreatePaymentBadRequest'
+        '409':
+          description: Another Customer already has the `customer.referenceId`, so it can't be given to the Customer passed as `customerId`. `customerId` in the response is the ID of the Customer that has it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerConflictProblemDetails'
+              examples:
+                CustomerReferenceIdAlreadyExists:
+                  value:
+                    title: You can't create the payment because of a conflict.
+                    status: 409
+                    detail: Another Customer already has the reference passed as Customer.ReferenceId.
+                    code: CUSTOMER_REFERENCE_ID_ALREADY_EXISTS
+                    customerId: cs_YZOJp96qKlW
   /v1/payments/{id}:
     get:
       tags:
@@ -2118,7 +2199,11 @@ components:
           nullable: true
         referenceId:
           type: string
-          description: A unique identifier from your system that you can use to reference this Customer. This can be used to reconcile the Customer with your internal systems.
+          description: The ID of the customer in your own system, such as the user ID of your website. It is unique per environment, so two Customers of the same environment can't share it.
+          nullable: true
+        language:
+          type: string
+          description: The language the Customer is written to in, as an ISO 639-1 two-letter code.
           nullable: true
         companyId:
           type: string
@@ -2138,6 +2223,12 @@ components:
           readOnly: true
         spendData:
           $ref: '#/components/schemas/Customers.SpendData'
+        consents:
+          type: array
+          description: The current choice of the Customer for each purpose and channel it expressed one for. A consent never expressed is absent.
+          items:
+            $ref: '#/components/schemas/Customers.Consent'
+          readOnly: true
         metadata:
           $ref: '#/components/schemas/Metadata'
       additionalProperties: false
@@ -2210,12 +2301,30 @@ components:
           type: string
           description: The customer’s phone number.
           nullable: true
+        referenceId:
+          type: string
+          description: The ID of the customer in your own system, such as the user ID of your website. It is unique per environment, so two Customers of the same environment can't share it. When another Customer already has it, the request fails with `409 Conflict`.
+          maxLength: 100
+          nullable: true
+        language:
+          type: string
+          description: The language to write to the Customer in, as an ISO 639-1 two-letter code such as `it` or `en`.
+          minLength: 2
+          maxLength: 2
+          nullable: true
         companyId:
           type: string
           description: The ID of the Company this Customer is associated with.
           nullable: true
         metadata:
           $ref: '#/components/schemas/Metadata'
+        consents:
+          type: array
+          description: The choices the Customer made about marketing and profiling, as you collected them. Each one is kept in the consent register with its date, text and version.
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Customers.ConsentRequest'
+          nullable: true
         options:
           type: object
           description: Optional settings for customer creation.
@@ -2229,7 +2338,7 @@ components:
       additionalProperties: false
     UpdateCustomerRequest:
       type: object
-      description: Request body for updating a Customer. Any field not provided will be left unchanged. `referenceId` cannot be changed via this endpoint.
+      description: Request body for updating a Customer. Any field not provided will be left unchanged.
       properties:
         email:
           type: string
@@ -2247,12 +2356,124 @@ components:
           type: string
           description: The customer’s phone number.
           nullable: true
+        referenceId:
+          type: string
+          description: The ID of the customer in your own system, such as the user ID of your website. It is unique per environment, so two Customers of the same environment can't share it. Use it to link a Customer that already exists to your user, or pass `null` to unlink it. When another Customer already has it, the request fails with `409 Conflict`.
+          maxLength: 100
+          nullable: true
+        language:
+          type: string
+          description: The language to write to the Customer in, as an ISO 639-1 two-letter code such as `it` or `en`.
+          minLength: 2
+          maxLength: 2
+          nullable: true
         companyId:
           type: string
           description: The ID of the Company this Customer is associated with. Pass `null` to detach the Customer from its Company.
           nullable: true
         metadata:
           $ref: '#/components/schemas/Metadata'
+        consents:
+          type: array
+          description: Choices the Customer made after the last update, appended to the consent register. They never replace it, and a choice equal to the current one, with the same version, is ignored, so you can send the whole list at every update.
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Customers.ConsentRequest'
+          nullable: true
+      additionalProperties: false
+    Customers.Consent:
+      type: object
+      description: The current choice of a Customer for one purpose, and for marketing one channel.
+      readOnly: true
+      properties:
+        purpose:
+          type: string
+          enum:
+            - Marketing
+            - Profiling
+          description: What the consent is for. `Marketing` is receiving promotional messages; `Profiling` is the analysis of the purchase history to tailor offers.
+        channel:
+          type: string
+          enum:
+            - Email
+            - Sms
+            - Whatsapp
+          description: The channel of a marketing consent. Absent for profiling, which has no channel.
+          nullable: true
+        granted:
+          type: boolean
+          description: Whether the consent is given. False means the Customer revoked it, which for email is also the opposition to promotional email sent to past buyers.
+        collectedAt:
+          type: string
+          format: date-time
+          description: When the Customer made this choice, in UTC.
+        version:
+          type: string
+          description: The version of the consent text the Customer was shown.
+          nullable: true
+      additionalProperties: false
+    Customers.ConsentRequest:
+      type: object
+      description: One choice of the Customer as you collected it. IP address and user agent are the Customer's, not your server's.
+      required:
+        - purpose
+        - granted
+        - collectedAt
+      properties:
+        purpose:
+          type: string
+          enum:
+            - Marketing
+            - Profiling
+          description: What the consent is for. `Marketing` is receiving promotional messages on a channel; `Profiling` is the analysis of the purchase history to tailor offers.
+        channel:
+          type: string
+          enum:
+            - Email
+            - Sms
+            - Whatsapp
+          description: Required for a marketing consent, and not allowed for profiling.
+          nullable: true
+        granted:
+          type: boolean
+          description: True when the Customer gives the consent, false when they refuse or revoke it.
+        collectedAt:
+          type: string
+          format: date-time
+          description: When the Customer made the choice. It cannot be in the future. A choice older than the current one for the same purpose and channel is ignored.
+        source:
+          type: string
+          enum:
+            - Signup
+            - Profile
+            - Checkout
+            - Reservation
+            - LiveCapture
+            - Import
+            - Staff
+            - Other
+          description: Where the choice was collected. Defaults to `Other`.
+          nullable: true
+        text:
+          type: string
+          description: The text the Customer was shown. Required when `granted` is true.
+          maxLength: 4000
+          nullable: true
+        version:
+          type: string
+          description: The version of that text in your own system.
+          maxLength: 50
+          nullable: true
+        ipAddress:
+          type: string
+          description: The IP address of the Customer when they made the choice.
+          maxLength: 45
+          nullable: true
+        userAgent:
+          type: string
+          description: The user agent of the Customer's browser when they made the choice.
+          maxLength: 1024
+          nullable: true
       additionalProperties: false
     Customers.CustomerWalletTotals:
       type: object
@@ -2611,23 +2832,29 @@ components:
           nullable: true
         customerId:
           type: string
-          description: The ID of the Customer of this Payment. If empty a new Customer will be created.
+          description: The ID of an existing Customer of this Payment. See `customer` for how it combines with `customer.referenceId`.
           nullable: true
+        customer:
+          $ref: '#/components/schemas/CreatePaymentRequestCustomer'
         customerEmail:
           type: string
-          description: The email address of the customer associated with this Payment. Required when `customerId` is not provided.
+          description: The email address of the customer associated with this Payment. Send `customer.email` instead.
+          deprecated: true
           nullable: true
         customerFirstName:
           type: string
-          description: The first name of the customer associated with this Payment.
+          description: The first name of the customer associated with this Payment. Send `customer.firstName` instead.
+          deprecated: true
           nullable: true
         customerLastName:
           type: string
-          description: The last name of the customer associated with this Payment.
+          description: The last name of the customer associated with this Payment. Send `customer.lastName` instead.
+          deprecated: true
           nullable: true
         customerPhoneNumber:
           type: string
-          description: The phone number of the customer associated with this Payment.
+          description: The phone number of the customer associated with this Payment. Send `customer.phoneNumber` instead.
+          deprecated: true
           nullable: true
         customerPaymentMethodId:
           type: string
@@ -3108,6 +3335,42 @@ components:
           nullable: true
       required:
         - finalAmount
+      additionalProperties: false
+    CreatePaymentRequestCustomer:
+      type: object
+      description: |
+        Inline description of the customer of the Payment. The ID of an existing Customer is not part of it: send it as `customerId`, next to `customer`.
+
+        - With `customerId` alone, the Payment goes to that Customer.
+        - With `referenceId` alone, the Payment goes to the Customer with that reference, and a new Customer with that reference is created when there is none.
+        - With both `customerId` and `referenceId`, they must name the same Customer. A Customer with no reference takes `referenceId`, unless another Customer already has it, which fails with `409 Conflict`. A Customer with a different reference fails with `400 Bad Request` and code `CUSTOMER_REFERENCE_ID_MISMATCH`: change the reference by updating the Customer.
+        - With neither, a new Customer is created.
+
+        It replaces the deprecated `customerEmail`, `customerFirstName`, `customerLastName` and `customerPhoneNumber`: do not send them together with it.
+        When both are sent, whichever comes later in the body wins: `customer` replaces all of them, while each of them overwrites only its own field of `customer`.
+      nullable: true
+      properties:
+        referenceId:
+          type: string
+          description: The ID of the customer in your own system, such as the user ID of your website, unique per environment. It lets you charge the same Customer again without storing its Voucherly ID.
+          maxLength: 100
+          nullable: true
+        email:
+          type: string
+          description: The email address of the customer associated with this Payment. Required when `customerId` is not provided.
+          nullable: true
+        firstName:
+          type: string
+          description: The first name of the customer associated with this Payment.
+          nullable: true
+        lastName:
+          type: string
+          description: The last name of the customer associated with this Payment.
+          nullable: true
+        phoneNumber:
+          type: string
+          description: The phone number of the customer associated with this Payment.
+          nullable: true
       additionalProperties: false
     CreatePaymentRequestStore:
       type: object
@@ -4149,6 +4412,30 @@ components:
           type: integer
           format: int32
           description: Number of transactions contributing to net revenue.
+        confirmedVoucherAmount:
+          type: integer
+          format: int64
+          description: Meal-voucher share of the confirmed amount, in cents. On a partial capture the missing amount is taken from the meal-voucher share last. For the `WALLET` PaymentGateway it is the customer credit originally funded by meal vouchers.
+        confirmedVoucherCount:
+          type: integer
+          format: int32
+          description: Number of meal vouchers confirmed. Transactions whose PaymentGateway does not report the count are left out and counted in `confirmedVoucherCountMissing`. Always `0` for the `WALLET` PaymentGateway, whose vouchers are counted when the credit is topped up.
+        confirmedVoucherCountMissing:
+          type: integer
+          format: int32
+          description: Number of transactions with a confirmed meal-voucher share but no voucher count, either because the PaymentGateway did not report it or because only part of the share was captured. When it is not `0`, `confirmedVoucherCount` is a lower bound.
+        refundedVoucherAmount:
+          type: integer
+          format: int64
+          description: Meal-voucher share refunded to the PaymentGateway, in cents. The refund takes the non-voucher share first. A refund kept as customer credit is not included, since it never reaches the voucher issuer.
+        refundedVoucherCount:
+          type: integer
+          format: int32
+          description: Number of meal vouchers refunded. Only a refund of the whole meal-voucher share carries a count; the others are counted in `refundedVoucherCountMissing`.
+        refundedVoucherCountMissing:
+          type: integer
+          format: int32
+          description: Number of transactions with a refunded meal-voucher share but no voucher count. When it is not `0`, `refundedVoucherCount` is a lower bound.
         childPaymentGateways:
           type: array
           description: Breakdown of this row by secondary (child) PaymentGateway, when applicable.
@@ -4208,6 +4495,30 @@ components:
           type: integer
           format: int32
           description: Number of transactions contributing to net revenue.
+        confirmedVoucherAmount:
+          type: integer
+          format: int64
+          description: Meal-voucher share of the confirmed amount, in cents. On a partial capture the missing amount is taken from the meal-voucher share last. For the `WALLET` PaymentGateway it is the customer credit originally funded by meal vouchers.
+        confirmedVoucherCount:
+          type: integer
+          format: int32
+          description: Number of meal vouchers confirmed. Transactions whose PaymentGateway does not report the count are left out and counted in `confirmedVoucherCountMissing`. Always `0` for the `WALLET` PaymentGateway, whose vouchers are counted when the credit is topped up.
+        confirmedVoucherCountMissing:
+          type: integer
+          format: int32
+          description: Number of transactions with a confirmed meal-voucher share but no voucher count, either because the PaymentGateway did not report it or because only part of the share was captured. When it is not `0`, `confirmedVoucherCount` is a lower bound.
+        refundedVoucherAmount:
+          type: integer
+          format: int64
+          description: Meal-voucher share refunded to the PaymentGateway, in cents. The refund takes the non-voucher share first. A refund kept as customer credit is not included, since it never reaches the voucher issuer.
+        refundedVoucherCount:
+          type: integer
+          format: int32
+          description: Number of meal vouchers refunded. Only a refund of the whole meal-voucher share carries a count; the others are counted in `refundedVoucherCountMissing`.
+        refundedVoucherCountMissing:
+          type: integer
+          format: int32
+          description: Number of transactions with a refunded meal-voucher share but no voucher count. When it is not `0`, `refundedVoucherCount` is a lower bound.
       additionalProperties: false
     Reports.RevenuesTotals:
       type: object
@@ -4253,6 +4564,30 @@ components:
           type: integer
           format: int32
           description: Number of transactions contributing to net revenue.
+        confirmedVoucherAmount:
+          type: integer
+          format: int64
+          description: Meal-voucher share of the confirmed amount, in cents. On a partial capture the missing amount is taken from the meal-voucher share last. For the `WALLET` PaymentGateway it is the customer credit originally funded by meal vouchers.
+        confirmedVoucherCount:
+          type: integer
+          format: int32
+          description: Number of meal vouchers confirmed. Transactions whose PaymentGateway does not report the count are left out and counted in `confirmedVoucherCountMissing`. Always `0` for the `WALLET` PaymentGateway, whose vouchers are counted when the credit is topped up.
+        confirmedVoucherCountMissing:
+          type: integer
+          format: int32
+          description: Number of transactions with a confirmed meal-voucher share but no voucher count, either because the PaymentGateway did not report it or because only part of the share was captured. When it is not `0`, `confirmedVoucherCount` is a lower bound.
+        refundedVoucherAmount:
+          type: integer
+          format: int64
+          description: Meal-voucher share refunded to the PaymentGateway, in cents. The refund takes the non-voucher share first. A refund kept as customer credit is not included, since it never reaches the voucher issuer.
+        refundedVoucherCount:
+          type: integer
+          format: int32
+          description: Number of meal vouchers refunded. Only a refund of the whole meal-voucher share carries a count; the others are counted in `refundedVoucherCountMissing`.
+        refundedVoucherCountMissing:
+          type: integer
+          format: int32
+          description: Number of transactions with a refunded meal-voucher share but no voucher count. When it is not `0`, `refundedVoucherCount` is a lower bound.
       additionalProperties: false
     ProblemDetails:
       type: object
@@ -4321,6 +4656,31 @@ components:
           allOf:
             - $ref: '#/components/schemas/Payments.PaymentStatus'
       additionalProperties: false
+    CustomerConflictProblemDetails:
+      properties:
+        type:
+          type: string
+          nullable: true
+          description: A URI reference that identifies the problem type.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type. It remains consistent across occurrences of the same error type.
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 409
+        detail:
+          type: string
+          nullable: true
+          description: A human-readable explanation specific to this occurrence of the problem.
+        code:
+          type: string
+          description: A short string indicating the conflict, to handle it programmatically.
+        customerId:
+          type: string
+          description: The ID of the Customer that already has the email address or the reference.
+      additionalProperties: true
   responses:
     BadRequest:
       description: The request was unacceptable, often due to missing a required parameter.
@@ -4348,6 +4708,26 @@ components:
               entity: Customer
               key: cs_YZOJp96qKlW
               error: NotFound
+    CreatePaymentBadRequest:
+      description: The request was unacceptable, often due to missing a required parameter.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblemDetails'
+          examples:
+            ValidationError:
+              $ref: '#/components/examples/ValidationErrorExample'
+            ResourceMissing:
+              $ref: '#/components/examples/ResourceMissingExample'
+            CustomerReferenceIdMismatch:
+              summary: The Customer passed as customerId already has a different reference
+              value:
+                type: https://tools.ietf.org/html/rfc9110#section-15.5.1
+                title: Customer.ReferenceId does not match the Customer.
+                status: 400
+                detail: The Customer passed as CustomerId already has a different reference, which a Payment can't replace. Update the Customer to change it.
+                code: CUSTOMER_REFERENCE_ID_MISMATCH
+                parameter: Customer.ReferenceId
     PaymentConflict:
       description: The request conflicts with the current state of the target resource.
       content:
