@@ -2,14 +2,16 @@
 
 namespace VoucherlyApi\Request;
 
+use VoucherlyApi\Enum\RefundMode;
 use VoucherlyApi\VoucherlyObject;
 
 class RefundPaymentRequest extends VoucherlyObject
 {
     /**
-     * Indicates whether the refunded amount should be added to the customer's wallet as credit.
+     * How every transaction is given back, overriding the `refundMode` of each one. Defaults to `Gateway`; `NoRefund` fails with `VALIDATION_ERROR`.
+     * One of the {@see RefundMode} constants.
      */
-    public ?bool $asCredit;
+    public ?string $refundMode;
 
     /**
      * List of transactions to be refunded.
