@@ -7,6 +7,7 @@ use VoucherlyApi\Model\Page;
 use VoucherlyApi\Request\CreateCompanyRequest;
 use VoucherlyApi\Request\ListCompanyParams;
 use VoucherlyApi\Request\RetrieveCompanyParams;
+use VoucherlyApi\Request\UpdateCompanyRequest;
 
 final class CompanyService extends AbstractService
 {
@@ -36,5 +37,17 @@ final class CompanyService extends AbstractService
     public function retrieve(string $idOrCode, ?RetrieveCompanyParams $params = null): Company
     {
         return Company::constructFrom($this->requestJson('GET', self::path('/v1/companys/%s', $idOrCode), null, $params));
+    }
+
+    /**
+     * Update a Company.
+     * Updates the specified company by setting the values of the parameters passed.
+     * Any parameters not provided will be left unchanged.
+     *
+     * @param string $idOrCode the unique identifier (ID) or join code of the Company to update
+     */
+    public function update(string $idOrCode, UpdateCompanyRequest $request): Company
+    {
+        return Company::constructFrom($this->requestJson('POST', self::path('/v1/companys/%s', $idOrCode), $request));
     }
 }

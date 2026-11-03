@@ -19,4 +19,9 @@ class CreateCompanyRequest extends VoucherlyObject
      * Required.
      */
     public string $name;
+
+    /**
+     * The ID of the Company in your own system. Another Company with the same reference answers 409.
+     */
+    public ?string $referenceId;
 }

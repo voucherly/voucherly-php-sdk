@@ -18,7 +18,7 @@ const RENAMES = [
 ];
 
 // Schemas that are not classes of their own: Id is a string, Metadata a map, the problem details are read by the exceptions.
-const SKIP = ['Id', 'Metadata', 'ProblemDetails', 'ValidationProblemDetails', 'PaymentConflictProblemDetails', 'PaginationResponse'];
+const SKIP = ['Id', 'Metadata', 'ProblemDetails', 'ValidationProblemDetails', 'PaymentConflictProblemDetails', 'CustomerConflictProblemDetails', 'CompanyConflictProblemDetails', 'PaginationResponse'];
 
 const HANDWRITTEN = ['PaginationResponse' => 'Pagination'];
 
@@ -31,6 +31,14 @@ const INLINE_ENUMS = [
     'CreatePaymentRequest.completionMode' => 'CompletionMode',
     'CreatePaymentRequest.exceedingAmountMode' => 'ExceedingAmountMode',
     'Stores.StoreStatus.status' => 'StoreStatusValue',
+    'Customers.Origin.type' => 'CustomerOriginType',
+    'CreateCustomerRequest.origin' => 'CustomerOriginRequest',
+    'Customers.Consent.purpose' => 'ConsentPurpose',
+    'Customers.ConsentRequest.purpose' => 'ConsentPurpose',
+    'Customers.Consent.channel' => 'ConsentChannel',
+    'Customers.ConsentRequest.channel' => 'ConsentChannel',
+    'Customers.ConsentRequest.source' => 'ConsentSource',
+    'Payments.PaymentDiscount.level' => 'DiscountLevel',
 ];
 
 const INCLUDE_ENUMS = [
@@ -303,6 +311,8 @@ function propertyType(string $class, string $schemaKey, string $jsonName, array 
 {
     global $schemas, $enums, $namespaces;
     $type = static fn (string $php, ?string $doc = null, ?string $types = null, ?string $enum = null, ?string $itemEnum = null, ?string $class = null): array => compact('php', 'doc', 'types', 'enum', 'itemEnum', 'class');
+    // A class that holds itself, as a modifier holds its options, names itself as self: the formatter rewrites it otherwise.
+    $classConstant = static fn (string $name): string => ($name === $class ? 'self' : $name) . '::class';
 
     [$kind, $detail] = unwrap($property);
     if ('ref' === $kind) {
@@ -324,7 +334,7 @@ function propertyType(string $class, string $schemaKey, string $jsonName, array 
         }
         $name = className($detail);
 
-        return $type('?' . $name, null, $name . '::class', null, null, $name);
+        return $type('?' . $name, null, $classConstant($name), null, null, $name);
     }
     if (isset($detail['enum'])) {
         return $type('?string', null, null, INLINE_ENUMS[$schemaKey . '.' . $jsonName]);
@@ -334,7 +344,7 @@ function propertyType(string $class, string $schemaKey, string $jsonName, array 
         case 'array':
             $item = propertyType($class, $schemaKey, $jsonName, $detail['items']);
             if (null !== $item['class']) {
-                return $type('?array', 'null|list<' . $item['class'] . '>', '[' . $item['class'] . '::class]', null, null, $item['class']);
+                return $type('?array', 'null|list<' . $item['class'] . '>', '[' . $classConstant($item['class']) . ']', null, null, $item['class']);
             }
 
             return $type('?array', 'null|list<' . substr($item['php'], 1) . '>', null, null, $item['enum']);

@@ -28,6 +28,13 @@ class Customer extends VoucherlyObject
     public ?string $created;
 
     /**
+     * The date and time the Customer registered on your website, in UTC, as you declared it with `registeredAt`. Null for the Customers not created through this API.
+     */
+    public ?string $registered;
+
+    public ?Origin $origin;
+
+    /**
      * The customer’s email address.
      */
     public ?string $email;
@@ -48,9 +55,19 @@ class Customer extends VoucherlyObject
     public ?string $phoneNumber;
 
     /**
-     * A unique identifier from your system that you can use to reference this Customer. This can be used to reconcile the Customer with your internal systems.
+     * The ID of the customer in your own system, such as the user ID of your website. It is unique per environment, so two Customers of the same environment can't share it.
      */
     public ?string $referenceId;
+
+    /**
+     * The language the Customer is written to in, as an ISO 639-1 two-letter code.
+     */
+    public ?string $language;
+
+    /**
+     * The Customer's date of birth, as `yyyy-MM-dd`.
+     */
+    public ?string $birthDate;
 
     /**
      * The ID of the Company this Customer is associated with.
@@ -69,6 +86,13 @@ class Customer extends VoucherlyObject
     public ?SpendData $spendData;
 
     /**
+     * The current choice of the Customer for each purpose and channel it expressed one for. A consent never expressed is absent.
+     *
+     * @var null|list<Consent>
+     */
+    public ?array $consents;
+
+    /**
      * @var null|array<string, string>
      */
     public ?array $metadata;
@@ -76,10 +100,12 @@ class Customer extends VoucherlyObject
     protected static function types(): array
     {
         return [
+            'origin' => Origin::class,
             'company' => Company::class,
             'packaging' => Packaging::class,
             'wallet' => CustomerWalletTotals::class,
             'spendData' => SpendData::class,
+            'consents' => [Consent::class],
             'metadata' => 'map',
         ];
     }

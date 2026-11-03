@@ -42,6 +42,7 @@ class ConfirmPaymentRequest extends VoucherlyObject
     public ?int $foodAmount;
 
     /**
+     * How money already captured is given back when the confirmed amounts are lower than what was captured. Only with `lines`, or with `finalAmount` and `foodAmount`. Defaults to `NoRefund`.
      * One of the {@see RefundMode} constants.
      */
     public ?string $refundMode;

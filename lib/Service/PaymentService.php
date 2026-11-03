@@ -3,6 +3,7 @@
 namespace VoucherlyApi\Service;
 
 use VoucherlyApi\Model\Payment;
+use VoucherlyApi\Model\PaymentQuote;
 use VoucherlyApi\Request\ConfirmPaymentRequest;
 use VoucherlyApi\Request\CreatePaymentRequest;
 use VoucherlyApi\Request\RefundPaymentRequest;
@@ -16,6 +17,15 @@ final class PaymentService extends AbstractService
     public function create(CreatePaymentRequest $request): Payment
     {
         return Payment::constructFrom($this->requestJson('POST', '/v1/payments', $request));
+    }
+
+    /**
+     * Quote a Payment.
+     * Prices the body of a Payment without creating it.
+     */
+    public function quote(CreatePaymentRequest $request): PaymentQuote
+    {
+        return PaymentQuote::constructFrom($this->requestJson('POST', '/v1/payments/quote', $request));
     }
 
     /**

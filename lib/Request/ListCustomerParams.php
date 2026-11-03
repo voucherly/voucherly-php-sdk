@@ -10,6 +10,11 @@ final class ListCustomerParams extends RequestParams
     public ?string $email;
 
     /**
+     * The ID of the Customer in your own system, as set in `referenceId`.
+     */
+    public ?string $referenceId;
+
+    /**
      * A limit on the number of objects to be returned. Limit can range between 1 and 100, and the default is 10.
      */
     public ?int $length;

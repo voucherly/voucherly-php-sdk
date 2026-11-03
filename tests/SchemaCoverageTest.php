@@ -19,6 +19,14 @@ final class SchemaCoverageTest extends ServiceTestCase
         'CreatePaymentRequest.completionMode' => 'CompletionMode',
         'CreatePaymentRequest.exceedingAmountMode' => 'ExceedingAmountMode',
         'Stores.StoreStatus.status' => 'StoreStatusValue',
+        'Customers.Origin.type' => 'CustomerOriginType',
+        'CreateCustomerRequest.origin' => 'CustomerOriginRequest',
+        'Customers.Consent.purpose' => 'ConsentPurpose',
+        'Customers.ConsentRequest.purpose' => 'ConsentPurpose',
+        'Customers.Consent.channel' => 'ConsentChannel',
+        'Customers.ConsentRequest.channel' => 'ConsentChannel',
+        'Customers.ConsentRequest.source' => 'ConsentSource',
+        'Payments.PaymentDiscount.level' => 'DiscountLevel',
     ];
 
     private const INCLUDE_ENUMS = [

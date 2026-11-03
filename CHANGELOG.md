@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.1.0 - 2026-11-03
+
+- `$client->payments->quote()` prices the body of a Payment without creating it, and returns a `PaymentQuote`.
+- `$client->companies->update()` updates a Company by ID or join code, with `UpdateCompanyRequest`: only the properties you assign are sent, and an explicit `null` removes the `$referenceId`.
+- `$referenceId` on `Company`, `CreateCompanyRequest` and `ListCompanyParams`, and on `CreateCustomerRequest`, `UpdateCustomerRequest` and `ListCustomerParams`: the ID in your own system.
+- `CreatePaymentRequest::$customer`, a `CreatePaymentRequestCustomer` with `$referenceId`, `$email`, `$firstName`, `$lastName`, `$phoneNumber`, `$emailVerified` and `$phoneVerified`. It replaces `$customerEmail`, `$customerFirstName`, `$customerLastName` and `$customerPhoneNumber`, which are now `@deprecated`.
+- `CreatePaymentRequest::$company`, a `CreatePaymentRequestCompany` with `$referenceId`, `$name` and `$joinCode`: the Payment finds the Company by its reference or creates it, and its Customer joins it.
+- On the Customer: `$language`, `$birthDate`, `$consents`, `$origin` and `$registered`; on the requests that create and update it, `$language`, `$birthDate` and `$consents`, plus `$origin` and `$registeredAt` on creation.
+- `Payment::$subtotalAmount`, `PaymentLine::$subtotalDiscountAmount`, options of an option on `PaymentLineModifier::$modifiers`, and `CustomerAddress::$additionalInformation`.
+- The meal-voucher amounts and counts, confirmed and refunded, on the revenues reports.
+- `LineOrigin::LIVE_OFFER`.
+- `Store::$reservationIsActive`, reservations used at all, and `Store::$reservationOnlineIsActive`, reservations open on the site, in place of `$ecommerceReservationIsActive`, also on `StoreRequest`.
+- A discount has `$level`, `LINE` or `SUBTOTAL` from `DiscountLevel`, its `$amount` in cents and `$externalCouponCode`, in place of `$type`, `$value`, `$index` and `DiscountType`. The discounts of `CreatePaymentRequest` are `PaymentDiscountRequest`.
+- `$refundMode` on `RefundPaymentRequest` and `RefundPaymentRequestTransaction`, in place of `$asCredit`: `RefundMode::CREDIT` credits the customer's wallet.
+
 ## 2.0.0 - 2026-10-01
 
 Rewritten from the OpenAPI spec of the Voucherly API, as published on 2026-10-01. The upgrade from 1.x is described in [UPGRADE-2.0.md](https://github.com/voucherly/voucherly-php-sdk/blob/main/UPGRADE-2.0.md).

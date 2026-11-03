@@ -2,7 +2,7 @@
 
 Shared Voucherly conventions live in the `claude-rules` submodule. After a fresh clone run `git submodule update --init`; to pull a newer version run `git submodule update --remote claude-rules` and commit the moved pointer.
 
-The submodule is hosted on the private Voucherly Azure DevOps, while this repository is public: a clone without that access builds and tests without it, and the CI does not fetch it.
+The submodule sits in `claude-rules/` and not in `vendor/claude-rules/` as in the other Voucherly repositories, because `vendor/` belongs to Composer and is ignored. It is hosted on the private Voucherly Azure DevOps, while this repository is public: a clone without that access builds and tests without it, the CI does not fetch it, and `.gitattributes` keeps it out of the Packagist archive.
 
 @claude-rules/rules/comments.md
 @claude-rules/rules/git.md
@@ -38,7 +38,7 @@ The local PHP is 8.2, so only the CI proves PHP 7.4. To try 7.4 locally, resolve
 
 ## Decisions
 
-- **The spec is the contract.** It is read from the `main` branch of the public voucherly-docs repository, `static/download/openapi.yaml`, which is what the documentation site serves. Methods, fields and the text of the docblocks come only from there: the repository is public, and a field the spec does not document stays out on purpose. The spec is written in SberemPay, `docs/dev/webapi/openapi.yaml`, and published to voucherly-docs by `npm run api:publish`: a wrong spec is fixed there, never worked around here.
+- **The spec is the contract.** It is read from the `main` branch of the public voucherly-docs repository, `static/download/openapi.yaml`, which is what the documentation site serves. Methods, fields and the text of the docblocks come only from there: the repository is public, and a field the spec does not document stays out on purpose. The spec is written in SberemPay, `docs/dev/webapi/openapi.yaml`, and published to voucherly-docs by `npm run api:publish` in `tools/apidocs`: a wrong spec is fixed there, never worked around here.
 - **No openapi-generator.** `tools/generate.php` writes the models, requests, parameters and enums in the style of this repository, and the services are written by hand. `tools/check-coverage.php` and `tests/SchemaCoverageTest.php` prove that nothing of the spec is missing.
 - **An instance client with one service per tag**, never static state: a process can hold more than one key, and a test can inject a transport.
 - **A request sends only the properties assigned to it, an explicit `null` included.** Request properties are typed with no default, so an unassigned one stays uninitialized and is skipped. Reading one throws an `Error`, as for any uninitialized typed property, and callers read it with `?? null`. A `__get` that returned `null` was rejected: it requires unsetting the properties, after which `$request->lines[] = $line` only raises a notice and drops the line. The API reads which fields are present: on `update-customer`, a missing field is left unchanged and a `null` one is cleared. A property of a class used only by requests refuses `null` when the spec says `nullable: false`; every other property is nullable, because a response can leave any of them out. The docblock of a property the spec lists in `required` says `Required.`, and a property the spec marks `deprecated` carries `@deprecated`.
@@ -53,7 +53,7 @@ The local PHP is 8.2, so only the CI proves PHP 7.4. To try 7.4 locally, resolve
 - **No runtime dependency** beyond `ext-curl` and `ext-json`: a Guzzle bundled in a plugin conflicts with the one of another plugin.
 - **`init.php`** is an `spl_autoload_register` on `lib/`, for the installations without Composer, so it cannot fall behind the files.
 - **Every directory of `lib/` has an `index.php`**: PrestaShop rejects a module whose directories lack one. `tests/Core/PackageTest.php` checks it.
-- **Response dates stay ISO 8601 strings.** `DateTimeImmutable` cannot read the seven fractional digits the API writes, and some timestamps of the API have no offset. Request dates are `\DateTimeInterface`.
+- **Response dates stay ISO 8601 strings.** `DateTimeImmutable::createFromFormat()` cannot read the seven fractional digits the API writes, and the constructor reads a timestamp without an offset, which the API also writes, in the local time zone, shifting the instant. Request dates are `\DateTimeInterface`.
 
 ## What the server does that the spec does not say
 
@@ -100,8 +100,7 @@ An automatic update reads the spec from GitHub at the commit that triggered it, 
 
 ## Conventions
 
-- No comments, except where the reason is not obvious. A comment sentence never breaks over two lines.
-- Commits in English, in the imperative, on one line, with no `Co-Authored-By` or any other reference to AI.
+- Comments and commit messages follow the imported `comments.md` and `git.md`.
 - No commit, stage, tag or push unless Francesco asks for it.
 - A field removed or renamed, or a method whose signature changes, is a major release.
 - A release is a pushed tag `vX.Y.Z`, as in the .NET SDK. Bump `VoucherlyClient::VERSION` and add the `## X.Y.Z - date` section to `CHANGELOG.md` first: a test checks that they agree. Packagist publishes the tag on its own, and `.github/workflows/release.yml` checks the tag against the version and the changelog, runs the CI and creates the GitHub release with the notes of that section. Never create a GitHub release by hand.

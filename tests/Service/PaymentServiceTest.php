@@ -44,6 +44,17 @@ final class PaymentServiceTest extends ServiceTestCase
         }
     }
 
+    public function testQuote(): void
+    {
+        $json = $this->respondWithSample('quote-payment');
+        $example = SpecExamples::requestExamples('create-payment')['Company from your system'];
+
+        $quote = $this->client->payments->quote(CreatePaymentRequest::fromArray($example));
+
+        $this->assertOperation('quote-payment', [], '', $example);
+        self::assertReadsEveryMember($json, $quote);
+    }
+
     public function testRetrieveWaitsWithTheWaitTimeHeader(): void
     {
         $json = $this->respondWithSample('retrieve-payment');

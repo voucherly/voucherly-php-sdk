@@ -52,6 +52,9 @@ The last command must print no change to the generated directories after the for
 
 Bump `VoucherlyClient::VERSION` by the release the changes make, and add a section to `CHANGELOG.md`: `## X.Y.Z - YYYY-MM-DD`, with the date of the spec download, and one line per change that a user of the SDK can see.
 
+The changelog speaks to a user of the SDK: one line per change they can see, and nothing about how the release was made.
+No line says which spec or which date it was synchronized with: the date is already in the heading, and every release comes from the spec.
+
 ## 6. Stop
 
 No commit, stage, tag or push unless Francesco asks for it. On a `sync-api/<date>` branch, the workflow has committed the spec and the generated code; the rest of the procedure stays in the working tree for Francesco to review.

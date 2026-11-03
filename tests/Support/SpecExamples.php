@@ -70,15 +70,25 @@ final class SpecExamples
     /**
      * A value for the schema: its example when it has one, otherwise a value of its type, with every property of an object.
      *
+     * A schema can hold itself, as a modifier holds its options: the second visit of a schema on the same path is left empty.
+     *
      * @param array<string, mixed> $schema
+     * @param array<string, true>  $visiting
      *
      * @return mixed
      */
-    public static function sample(array $schema)
+    public static function sample(array $schema, array $visiting = [])
     {
+        if (isset($schema['$ref'])) {
+            if (isset($visiting[$schema['$ref']])) {
+                return null;
+            }
+            $visiting[$schema['$ref']] = true;
+        }
+
         $schema = self::resolve($schema);
         if (isset($schema['allOf'])) {
-            return self::sample($schema['allOf'][0]);
+            return self::sample($schema['allOf'][0], $visiting);
         }
         if (isset($schema['enum'])) {
             return $schema['enum'][0];
@@ -89,7 +99,9 @@ final class SpecExamples
 
         switch ($schema['type'] ?? 'object') {
             case 'array':
-                return [self::sample($schema['items'])];
+                $item = self::sample($schema['items'], $visiting);
+
+                return null === $item ? [] : [$item];
 
             case 'integer':
                 return 1;
@@ -105,11 +117,11 @@ final class SpecExamples
 
             default:
                 if (!isset($schema['properties'])) {
-                    return ['key' => \is_array($schema['additionalProperties'] ?? null) ? self::sample($schema['additionalProperties']) : 'value'];
+                    return ['key' => \is_array($schema['additionalProperties'] ?? null) ? self::sample($schema['additionalProperties'], $visiting) : 'value'];
                 }
                 $object = [];
                 foreach ($schema['properties'] as $name => $property) {
-                    $object[$name] = self::sample($property);
+                    $object[$name] = self::sample($property, $visiting);
                 }
 
                 return $object;
