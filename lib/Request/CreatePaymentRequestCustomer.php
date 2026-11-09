@@ -9,8 +9,7 @@ use VoucherlyApi\VoucherlyObject;
  * - With `customerId` alone, the Payment goes to that Customer.
  * - With `referenceId` alone, the Payment goes to the Customer with that reference, and a new Customer with that reference is created when there is none.
  * - With both `customerId` and `referenceId`, they must name the same Customer. A Customer with no reference takes `referenceId`, unless another Customer already has it, which fails with `409 Conflict`. A Customer with a different reference fails with `400 Bad Request` and code `CUSTOMER_REFERENCE_ID_MISMATCH`: change the reference by updating the Customer.
- * - With neither, a new Customer is created, unless `emailVerified` or `phoneVerified` find the Customer that already has that email or phone.
- * A verified email or phone binds the Payment to an existing Customer only when no Customer was found by `customerId` or `referenceId`. The email is tried first, then the phone. With a `referenceId` no Customer has yet, only a Customer without a reference is found, and it takes `referenceId`. The checkout of a Payment shows the saved payment methods and the credit of its Customer: declare a contact verified only when the customer proved it is theirs, for example by logging in with a confirmed email.
+ * - With neither, a new Customer is created.
  * It replaces the deprecated `customerEmail`, `customerFirstName`, `customerLastName` and `customerPhoneNumber`: do not send them together with it.
  * When both are sent, whichever comes later in the body wins: `customer` replaces all of them, while each of them overwrites only its own field of `customer`.
  */
@@ -40,14 +39,4 @@ class CreatePaymentRequestCustomer extends VoucherlyObject
      * The phone number of the customer associated with this Payment.
      */
     public ?string $phoneNumber;
-
-    /**
-     * Whether the customer proved that `email` is theirs. Requires `email`, or the request fails with code `CUSTOMER_EMAIL_REQUIRED`. Defaults to false.
-     */
-    public ?bool $emailVerified;
-
-    /**
-     * Whether the customer proved that `phoneNumber` is theirs. Requires `phoneNumber`, or the request fails with code `CUSTOMER_PHONE_REQUIRED`. Defaults to false.
-     */
-    public ?bool $phoneVerified;
 }

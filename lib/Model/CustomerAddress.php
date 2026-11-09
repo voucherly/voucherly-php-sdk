@@ -48,9 +48,4 @@ class CustomerAddress extends VoucherlyObject
      * The country code of the address (e.g., "IT" for Italy).
      */
     public ?string $country;
-
-    /**
-     * Flat, intercom and notes for the rider left on the last delivery to this address, at most 300 characters.
-     */
-    public ?string $additionalInformation;
 }

@@ -84,14 +84,9 @@ class Store extends VoucherlyObject
     public ?bool $ecommercePickupIsActive;
 
     /**
-     * Whether the Store uses reservations, both from the site and entered by the staff.
+     * Whether the Store accepts e-commerce reservations.
      */
-    public ?bool $reservationIsActive;
-
-    /**
-     * Whether the Store can be booked online, appearing in the Prenota section of the site.
-     */
-    public ?bool $reservationOnlineIsActive;
+    public ?bool $ecommerceReservationIsActive;
 
     /**
      * The current health of the Store POS connection. Returned only when `status` is requested through the `include` parameter, and only for active Stores that have `pos` configured.

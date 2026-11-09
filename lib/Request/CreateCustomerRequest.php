@@ -2,7 +2,6 @@
 
 namespace VoucherlyApi\Request;
 
-use VoucherlyApi\Enum\CustomerOriginRequest;
 use VoucherlyApi\VoucherlyObject;
 
 /**
@@ -41,11 +40,6 @@ class CreateCustomerRequest extends VoucherlyObject
     public ?string $language;
 
     /**
-     * The Customer's date of birth, as `yyyy-MM-dd`. It can't be in the future or before 1900-01-01.
-     */
-    public ?\DateTimeInterface $birthDate;
-
-    /**
      * The ID of the Company this Customer is associated with.
      */
     public ?string $companyId;
@@ -63,17 +57,6 @@ class CreateCustomerRequest extends VoucherlyObject
     public ?array $consents;
 
     /**
-     * When the Customer registered on your website, if it was not now. Send it when you synchronize existing customers. A registration older than 24 hours starts no Marketing automation. It can't be in the future. Defaults to now.
-     */
-    public ?string $registeredAt;
-
-    /**
-     * Where you won the Customer. Voucherly records the other points of acquisition, such as the table or a Payment link, itself, and refuses them here with code `ORIGIN_NOT_DECLARABLE`. Defaults to `Api`.
-     * One of the {@see CustomerOriginRequest} constants.
-     */
-    public ?string $origin;
-
-    /**
      * Optional settings for customer creation.
      */
     public ?CreateCustomerRequestOptions $options;
@@ -81,7 +64,6 @@ class CreateCustomerRequest extends VoucherlyObject
     protected static function types(): array
     {
         return [
-            'birthDate' => 'date',
             'metadata' => 'map',
             'consents' => [ConsentRequest::class],
             'options' => CreateCustomerRequestOptions::class,

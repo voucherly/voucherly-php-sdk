@@ -29,11 +29,6 @@ class Company extends VoucherlyObject
     public ?string $joinCode;
 
     /**
-     * The ID of the Company in your own system. Unique among your Companies, so a Payment can find the Company by it.
-     */
-    public ?string $referenceId;
-
-    /**
      * Company name.
      */
     public ?string $name;

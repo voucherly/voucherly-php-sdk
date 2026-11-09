@@ -5,6 +5,7 @@ namespace VoucherlyApi\Request;
 use VoucherlyApi\Enum\CompletionMode;
 use VoucherlyApi\Enum\ExceedingAmountMode;
 use VoucherlyApi\Enum\PaymentMode;
+use VoucherlyApi\Model\PaymentDiscount;
 use VoucherlyApi\VoucherlyObject;
 
 /**
@@ -29,12 +30,10 @@ class CreatePaymentRequest extends VoucherlyObject
     public ?string $mode;
 
     /**
-     * The ID of the Company of the Customer of this Payment. If empty, the Company associated with the Customer will be used, if one exists.
-     * The Customer joins this Company and stays in it, moving from another Company if it was in one. You cannot specify both `company` and `companyId`.
+     * The ID of the Company this Payment is associated with. If empty, the Company associated with the Customer will be used, if one exists.
+     * You cannot specify both `customerId` and `companyId` at the same time.
      */
     public ?string $companyId;
-
-    public ?CreatePaymentRequestCompany $company;
 
     /**
      * The ID of an existing Customer of this Payment. See `customer` for how it combines with `customer.referenceId`.
@@ -99,9 +98,9 @@ class CreatePaymentRequest extends VoucherlyObject
     public ?array $lines;
 
     /**
-     * The discounts of this Payment. A discount either states its own `amount`, taken off the subtotal, or carries only a `couponCode` that Voucherly prices. Not allowed with `mode` `Wallet` or `Setup`, nor on a Payment without lines.
+     * An array of PaymentDiscount objects representing all discounts applied to this Payment.
      *
-     * @var null|list<PaymentDiscountRequest>
+     * @var null|list<PaymentDiscount>
      */
     public ?array $discounts;
 
@@ -178,11 +177,10 @@ class CreatePaymentRequest extends VoucherlyObject
     {
         return [
             'referenceDate' => 'date',
-            'company' => CreatePaymentRequestCompany::class,
             'customer' => CreatePaymentRequestCustomer::class,
             'metadata' => 'map',
             'lines' => [PaymentLineRequest::class],
-            'discounts' => [PaymentDiscountRequest::class],
+            'discounts' => [PaymentDiscount::class],
             'store' => CreatePaymentRequestStore::class,
             'transactions' => [CreatePaymentRequestTransaction::class],
         ];

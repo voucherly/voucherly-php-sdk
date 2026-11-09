@@ -28,14 +28,9 @@ class PaymentLine extends VoucherlyObject
     public ?int $unitDiscountAmount;
 
     /**
-     * A non-negative integer in cents representing the total discount applied to the entire line, the discounts of `level` `Line` included.
+     * A non-negative integer in cents representing the total discount applied to the entire line.
      */
     public ?int $discountAmount;
-
-    /**
-     * In cents, the share of the discounts of `level` `Subtotal` that falls on this line. `finalAmount` does not include it, and `finalAmount - subtotalDiscountAmount` is what the line was paid.
-     */
-    public ?int $subtotalDiscountAmount;
 
     /**
      * `unitAmount` times `quantity`, in cents. Compute it from those two instead.
