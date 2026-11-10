@@ -32,7 +32,7 @@ class ConsentRequest extends VoucherlyObject
     public ?bool $granted;
 
     /**
-     * When the Customer made the choice. It cannot be in the future. A choice older than the current one for the same purpose and channel is ignored.
+     * When the Customer made the choice. It cannot be in the future. A choice older than the current one for the same purpose and channel is ignored. A consent collected more than 24 hours ago is recorded but starts no Marketing automation.
      * Required.
      */
     public ?string $collectedAt;

@@ -91,6 +91,17 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateCompanyRequest'
+            examples:
+              Default:
+                summary: Create a company
+                value:
+                  name: Acme Srl
+              Reference:
+                summary: Create a company identified by your own company ID
+                value:
+                  name: Acme Srl
+                  joinCode: ACME01
+                  referenceId: company-318
         required: true
       responses:
         '201':
@@ -101,18 +112,44 @@ paths:
                 $ref: '#/components/schemas/Company'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Another Company already has the `joinCode` or the `referenceId`. `companyId` is the ID of that Company.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyConflictProblemDetails'
+              examples:
+                JoinCodeAlreadyExists:
+                  value:
+                    title: You can't create the company because of a conflict.
+                    status: 409
+                    detail: Another Company already has this JoinCode. Specify another one.
+                    code: JOIN_CODE_ALREADY_EXISTS
+                    companyId: com_01kg2gestgepdbmsn7hs6bsrwp
+                ReferenceIdAlreadyExists:
+                  value:
+                    title: You can't create the company because of a conflict.
+                    status: 409
+                    detail: Another Company already has this ReferenceId.
+                    code: REFERENCE_ID_ALREADY_EXISTS
+                    companyId: com_01kg2gestgepdbmsn7hs6bsrwp
     get:
       tags:
         - company
       operationId: list-company
       summary: List all Companies
       parameters:
+        - name: referenceId
+          description: The ID of the Company in your own system, as set in `referenceId`.
+          in: query
+          schema:
+            type: string
         - $ref: '#/components/parameters/PageSizeQueryParam'
         - $ref: '#/components/parameters/PageStartQueryParam'
       responses:
         '200':
           description: |
-            A dictionary with an `items` property that contains an array of up to `length` Companies, starting after Company `start`. Each entry in the array is a separate Company object. If no more Companies are available, the resulting array will be empty.
+            A dictionary with an `items` property that contains an array of up to `length` Companies, starting after Company `start`. Passing an optional referenceId will result in filtering to the Company with that exact reference. Each entry in the array is a separate Company object. If no more Companies are available, the resulting array will be empty.
           content:
             application/json:
               schema:
@@ -162,6 +199,66 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - company
+      operationId: update-company
+      summary: Update a Company
+      description: Updates the specified company by setting the values of the parameters passed. Any parameters not provided will be left unchanged.
+      parameters:
+        - name: idOrCode
+          in: path
+          required: true
+          description: The unique identifier (ID) or join code of the Company to update.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCompanyRequest'
+            examples:
+              Name:
+                summary: Rename a company
+                value:
+                  name: Acme Spa
+              Reference:
+                summary: Link a company to your own company ID
+                value:
+                  referenceId: company-318
+        required: true
+      responses:
+        '200':
+          description: Returns a Company object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Another Company already has the `joinCode` or the `referenceId`. `companyId` is the ID of that Company.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyConflictProblemDetails'
+              examples:
+                JoinCodeAlreadyExists:
+                  value:
+                    title: You can't update the company because of a conflict.
+                    status: 409
+                    detail: Another Company already has this JoinCode. Specify another one.
+                    code: JOIN_CODE_ALREADY_EXISTS
+                    companyId: com_01kg2gestgepdbmsn7hs6bsrwp
+                ReferenceIdAlreadyExists:
+                  value:
+                    title: You can't update the company because of a conflict.
+                    status: 409
+                    detail: Another Company already has this ReferenceId.
+                    code: REFERENCE_ID_ALREADY_EXISTS
+                    companyId: com_01kg2gestgepdbmsn7hs6bsrwp
   /v1/customers:
     post:
       tags:
@@ -653,6 +750,27 @@ paths:
                         externalId: SKU-MUFFIN-001
                         name: Muffin
                         lineType: Food
+              Company from your system:
+                summary: Create payment for an employee of a company identified by your own company ID
+                value:
+                  mode: Payment
+                  customer:
+                    referenceId: user-4821
+                    firstName: Mario
+                    lastName: Rossi
+                    email: mario.rossi@voucherly.it
+                  company:
+                    referenceId: company-318
+                    name: Acme Srl
+                  redirectOkUrl: https://httpbin.org/get
+                  redirectKoUrl: https://httpbin.org/get
+                  lines:
+                    - quantity: 1
+                      unitAmount: 250
+                      product:
+                        externalId: SKU-MUFFIN-001
+                        name: Muffin
+                        lineType: Food
               New store:
                 summary: Create payment on a store identified by your own ids
                 value:
@@ -838,6 +956,40 @@ paths:
                     detail: Another Customer already has the reference passed as Customer.ReferenceId.
                     code: CUSTOMER_REFERENCE_ID_ALREADY_EXISTS
                     customerId: cs_YZOJp96qKlW
+  /v1/payments/quote:
+    post:
+      tags:
+        - payment
+      operationId: quote-payment
+      summary: Quote a Payment
+      description: |
+        Prices the body of a Payment without creating it: the lines at the prices Voucherly resolves, the delivery fee and the coupons passed by `couponCode` in `discounts`. Use it to show the customer the total the Payment will have before it is created. A coupon that does not apply answers the same 400 as Create a Payment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+            example:
+              mode: Payment
+              redirectOkUrl: https://www.example.com/ok
+              redirectKoUrl: https://www.example.com/ko
+              lines:
+                - quantity: 1
+                  unitAmount: 1000
+                  product:
+                    name: Pizza Margherita
+              discounts:
+                - couponCode: BENVENUTO
+      responses:
+        '200':
+          description: Returns the amounts, the lines and the discounts the Payment would have.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentQuote'
+        '400':
+          $ref: '#/components/responses/CreatePaymentBadRequest'
   /v1/payments/{id}:
     get:
       tags:
@@ -1807,9 +1959,12 @@ components:
         ecommercePickupIsActive:
           type: boolean
           description: Whether the Store accepts e-commerce orders for pickup.
-        ecommerceReservationIsActive:
+        reservationIsActive:
           type: boolean
-          description: Whether the Store accepts e-commerce reservations.
+          description: Whether the Store uses reservations, both from the site and entered by the staff.
+        reservationOnlineIsActive:
+          type: boolean
+          description: Whether the Store can be booked online, appearing in the Prenota section of the site.
       additionalProperties: false
     Store:
       x-tags:
@@ -1880,9 +2035,12 @@ components:
         ecommercePickupIsActive:
           type: boolean
           description: Whether the Store accepts e-commerce orders for pickup.
-        ecommerceReservationIsActive:
+        reservationIsActive:
           type: boolean
-          description: Whether the Store accepts e-commerce reservations.
+          description: Whether the Store uses reservations, both from the site and entered by the staff.
+        reservationOnlineIsActive:
+          type: boolean
+          description: Whether the Store can be booked online, appearing in the Prenota section of the site.
         status:
           allOf:
             - $ref: '#/components/schemas/Stores.StoreStatus'
@@ -2116,6 +2274,11 @@ components:
           nullable: false
           minLength: 6
           maxLength: 6
+        referenceId:
+          type: string
+          description: The ID of the Company in your own system. Unique among your Companies, so a Payment can find the Company by it.
+          nullable: true
+          maxLength: 100
         name:
           type: string
           description: Company name.
@@ -2161,6 +2324,33 @@ components:
           type: string
           description: Company name.
           nullable: false
+          maxLength: 100
+        referenceId:
+          type: string
+          description: The ID of the Company in your own system. Another Company with the same reference answers 409.
+          nullable: true
+          maxLength: 100
+      additionalProperties: false
+    UpdateCompanyRequest:
+      type: object
+      description: Request body for updating a Company. Only the fields passed change.
+      properties:
+        name:
+          type: string
+          description: Company name.
+          nullable: false
+          maxLength: 100
+        joinCode:
+          type: string
+          description: A unique 6-character code that can be used to join or reference this Company. Another Company with the same code answers 409.
+          nullable: false
+          minLength: 6
+          maxLength: 6
+        referenceId:
+          type: string
+          description: The ID of the Company in your own system. Null removes it. Another Company with the same reference answers 409.
+          nullable: true
+          maxLength: 100
       additionalProperties: false
     Customer:
       x-displayName: Customer
@@ -2181,6 +2371,14 @@ components:
           type: string
           format: date-time
           description: The date and time the Customer was created, in UTC.
+        registered:
+          type: string
+          format: date-time
+          description: The date and time the Customer registered on your website, in UTC, as you declared it with `registeredAt`. Null for the Customers not created through this API.
+          nullable: true
+          readOnly: true
+        origin:
+          $ref: '#/components/schemas/Customers.Origin'
         email:
           type: string
           description: The customer’s email address.
@@ -2204,6 +2402,11 @@ components:
         language:
           type: string
           description: The language the Customer is written to in, as an ISO 639-1 two-letter code.
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          description: The Customer's date of birth, as `yyyy-MM-dd`.
           nullable: true
         companyId:
           type: string
@@ -2248,6 +2451,35 @@ components:
         isDepositPaid:
           type: boolean
           description: Whether the deposit on the reusable packaging has been paid.
+          nullable: true
+      additionalProperties: false
+    Customers.Origin:
+      type: object
+      description: Where the Customer was won, set when it was created and never changed. Null for the Customers created before it was recorded.
+      nullable: true
+      readOnly: true
+      properties:
+        type:
+          type: string
+          enum:
+            - Site
+            - Table
+            - PaymentLink
+            - Reservation
+            - LoyaltyCard
+            - Collaborator
+            - Popup
+            - Import
+            - Staff
+            - Api
+          description: The point of acquisition. `Api` is a Customer your own system created without saying where it came from.
+        storeId:
+          type: string
+          description: The Store where the Customer was won, such as the Store of the table or of the reservation.
+          nullable: true
+        sourceId:
+          type: string
+          description: The ID of what brought the Customer, such as the Payment link or the reservation.
           nullable: true
       additionalProperties: false
     Customers.SpendData:
@@ -2312,6 +2544,11 @@ components:
           minLength: 2
           maxLength: 2
           nullable: true
+        birthDate:
+          type: string
+          format: date
+          description: The Customer's date of birth, as `yyyy-MM-dd`. It can't be in the future or before 1900-01-01.
+          nullable: true
         companyId:
           type: string
           description: The ID of the Company this Customer is associated with.
@@ -2324,6 +2561,20 @@ components:
           maxItems: 20
           items:
             $ref: '#/components/schemas/Customers.ConsentRequest'
+          nullable: true
+        registeredAt:
+          type: string
+          format: date-time
+          description: When the Customer registered on your website, if it was not now. Send it when you synchronize existing customers. A registration older than 24 hours starts no Marketing automation. It can't be in the future. Defaults to now.
+          nullable: true
+        origin:
+          type: string
+          enum:
+            - Site
+            - Staff
+            - Import
+            - Api
+          description: Where you won the Customer. Voucherly records the other points of acquisition, such as the table or a Payment link, itself, and refuses them here with code `ORIGIN_NOT_DECLARABLE`. Defaults to `Api`.
           nullable: true
         options:
           type: object
@@ -2366,6 +2617,11 @@ components:
           description: The language to write to the Customer in, as an ISO 639-1 two-letter code such as `it` or `en`.
           minLength: 2
           maxLength: 2
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          description: The Customer's date of birth, as `yyyy-MM-dd`. It can't be in the future or before 1900-01-01. Pass `null` to clear it.
           nullable: true
         companyId:
           type: string
@@ -2440,7 +2696,7 @@ components:
         collectedAt:
           type: string
           format: date-time
-          description: When the Customer made the choice. It cannot be in the future. A choice older than the current one for the same purpose and channel is ignored.
+          description: When the Customer made the choice. It cannot be in the future. A choice older than the current one for the same purpose and channel is ignored. A consent collected more than 24 hours ago is recorded but starts no Marketing automation.
         source:
           type: string
           enum:
@@ -2685,10 +2941,15 @@ components:
           format: int32
           description: The total amount of the payment before discounts, in cents. This is the sum of all line items.
           readOnly: true
+        subtotalAmount:
+          type: integer
+          format: int32
+          description: The sum of the lines after their own discounts, in cents. The discounts of `level` `Subtotal` come off it.
+          readOnly: true
         discountAmount:
           type: integer
           format: int32
-          description: The total amount of discounts applied to the payment, in cents. This is the sum of all discount amounts.
+          description: Every discount of the payment, in cents, on the lines and on the subtotal.
           readOnly: true
         finalAmount:
           type: integer
@@ -2826,10 +3087,12 @@ components:
         companyId:
           type: string
           description: |
-            The ID of the Company this Payment is associated with. If empty, the Company associated with the Customer will be used, if one exists.
+            The ID of the Company of the Customer of this Payment. If empty, the Company associated with the Customer will be used, if one exists.
 
-            You cannot specify both `customerId` and `companyId` at the same time.
+            The Customer joins this Company and stays in it, moving from another Company if it was in one. You cannot specify both `company` and `companyId`.
           nullable: true
+        company:
+          $ref: '#/components/schemas/CreatePaymentRequestCompany'
         customerId:
           type: string
           description: The ID of an existing Customer of this Payment. See `customer` for how it combines with `customer.referenceId`.
@@ -2878,9 +3141,9 @@ components:
             $ref: '#/components/schemas/Payments.PaymentLine.Request'
         discounts:
           type: array
-          description: An array of PaymentDiscount objects representing all discounts applied to this Payment.
+          description: The discounts of this Payment. A discount either states its own `amount`, taken off the subtotal, or carries only a `couponCode` that Voucherly prices. Not allowed with `mode` `Wallet` or `Setup`, nor on a Payment without lines.
           items:
-            $ref: '#/components/schemas/Payments.PaymentDiscount'
+            $ref: '#/components/schemas/Payments.PaymentDiscount.Request'
         timeout:
           type: integer
           description: Seconds the customer has to complete the checkout, after which the Payment is voided. Without it the checkout has no deadline of its own, and a Payment still `Requested` 12 hours after its creation is voided.
@@ -3117,6 +3380,30 @@ components:
           format: date-time
           description: The UTC timestamp when the last callback was sent.
       additionalProperties: false
+    Payments.PaymentDiscount.Request:
+      type: object
+      properties:
+        discountName:
+          type: string
+          description: The discount’s name, meant to be displayable to the customer. Not allowed with `couponCode`.
+          nullable: false
+        discountDescription:
+          type: string
+          description: The discount’s description. Use this field to optionally store a long form explanation of the discount for your own rendering purposes. Not allowed with `couponCode`.
+          nullable: true
+        amount:
+          type: integer
+          description: A positive integer in cents taken off the subtotal, the sum of the lines after their own discounts. Voucherly spreads it on every line except gifts, in proportion to their amount, to split it by VAT rate on the receipt and between food and non-food. Required unless the discount carries a `couponCode`.
+          format: int32
+          nullable: true
+        couponCode:
+          type: string
+          description: |
+            The code of a coupon created in Voucherly, as the customer typed it: case and spaces do not count. A discount with a `couponCode` takes no other field: Voucherly names the discount after the coupon and prices it by its rules. A coupon on products, a gift or the delivery becomes a discount of `level` `Line`, taken off the `discountAmount` of the lines it applies to; a coupon on the whole order becomes a discount of `level` `Subtotal`. Up to 5 discounts of a Payment can carry a code. A code that does not apply stops the Payment with a 400 whose `parameter` is `Discounts`, whose `couponCode` is the code and whose `code` says why: `COUPON_NOT_FOUND`, `COUPON_NOT_ACTIVE`, `COUPON_NOT_YET_VALID`, `COUPON_EXPIRED`, `COUPON_MIN_ORDER` (with `minOrderAmount`), `COUPON_NOT_APPLICABLE`, `COUPON_EXHAUSTED`, `COUPON_ALREADY_USED`, `COUPON_REQUIRES_CUSTOMER`, `COUPON_NOT_COMBINABLE`, `COUPON_NOT_AVAILABLE_AT_TABLE`, `COUPON_FIRST_ORDER_ONLY`.
+          maxLength: 40
+          nullable: true
+          example: BENVENUTO
+      additionalProperties: false
     Payments.PaymentDiscount:
       type: object
       properties:
@@ -3128,22 +3415,16 @@ components:
           type: string
           description: The discount’s description. Use this field to optionally store a long form explanation of the product being sold for your own rendering purposes.
           nullable: true
+        level:
+          type: string
+          description: '`Line` when the discount is already in the `discountAmount` of the lines it applies to, `Subtotal` when it comes off the sum of the lines and leaves them as they are.'
+          enum:
+            - Line
+            - Subtotal
         amount:
           type: integer
-          description: A non-negative integer in cents representing how much to subtract from the total. Must be specified when both `type` and `value` are null.
+          description: In cents, what the discount is worth. A discount of `level` `Subtotal` comes off the sum of the lines; one of `level` `Line` is already in their `discountAmount` and is not taken off again.
           format: int32
-        type:
-          $ref: '#/components/schemas/Payments.DiscountType'
-        value:
-          type: integer
-          description: The value of the discount, contextual to the selected `type`. Must be specified when `type` is provided and `amount` is null.
-          format: int32
-          nullable: true
-        index:
-          type: integer
-          description: Defines the application order of this discount relative to others.
-          format: int32
-          nullable: true
         externalId1:
           type: string
           description: Primary external reference for the discount, used by Voucherly to reconcile it across systems and to correctly compute reporting.
@@ -3154,24 +3435,48 @@ components:
           nullable: true
         couponCode:
           type: string
-          description: The coupon code the payer entered to obtain this discount.
+          description: The code of the Voucherly coupon that produced this discount, as passed in the `couponCode` of a discount of the request.
+          nullable: true
+        externalCouponCode:
+          type: string
+          description: The code of a promotion priced by the merchant's POS, such as one the customer entered at the table. Voucherly passes it back to the POS and does not validate it.
           nullable: true
         points:
           type: integer
           format: int32
           description: The loyalty points spent to obtain this discount.
       additionalProperties: false
-    Payments.DiscountType:
-      enum:
-        - DOLLAROFF
-        - PERCENOFF
-        - FIXED
-      description: |
-        Defines how the discount is calculated:
-        - `DOLLAROFF`: A fixed amount in cents is subtracted from the total.
-        - `PERCENOFF`: A percentage of the total amount is subtracted.
-        - `FIXED`: The final price is set to a fixed amount, overriding the original total.
-      type: string
+    PaymentQuote:
+      type: object
+      description: What a Payment created from the same body would cost. Nothing is created.
+      properties:
+        totalAmount:
+          type: integer
+          format: int32
+          description: In cents, the sum of the lines before any discount.
+        discountAmount:
+          type: integer
+          format: int32
+          description: In cents, every discount, on the lines and on the whole Payment.
+        finalAmount:
+          type: integer
+          format: int32
+          description: In cents, what the customer would pay.
+        foodAmount:
+          type: integer
+          format: int32
+          description: In cents, the part of `finalAmount` that meal vouchers can pay.
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payments.PaymentLine'
+          nullable: true
+        discounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payments.PaymentDiscount'
+          nullable: true
+      additionalProperties: false
     Payments.PaymentLine:
       type: object
       description: |
@@ -3194,7 +3499,12 @@ components:
         discountAmount:
           type: integer
           format: int32
-          description: A non-negative integer in cents representing the total discount applied to the entire line.
+          description: A non-negative integer in cents representing the total discount applied to the entire line, the discounts of `level` `Line` included.
+        subtotalDiscountAmount:
+          type: integer
+          format: int32
+          description: In cents, the share of the discounts of `level` `Subtotal` that falls on this line. `finalAmount` does not include it, and `finalAmount - subtotalDiscountAmount` is what the line was paid.
+          readOnly: true
         totalAmount:
           type: integer
           format: int32
@@ -3295,9 +3605,11 @@ components:
         Where the PaymentLine comes from:
         - `Standard`: the line was part of the original order.
         - `TableUpsell`: the line was added by an upselling proposal accepted while paying at the table.
+        - `LiveOffer`: the product of the line was added to the cart from an upselling popup of Voucherly Marketing, in the session named by the `voucherly_marketing_session` metadata. Voucherly sets it when the payment is created.
       enum:
         - Standard
         - TableUpsell
+        - LiveOffer
       type: string
     Payments.PaymentLine.Unit:
       type: object
@@ -3344,7 +3656,9 @@ components:
         - With `customerId` alone, the Payment goes to that Customer.
         - With `referenceId` alone, the Payment goes to the Customer with that reference, and a new Customer with that reference is created when there is none.
         - With both `customerId` and `referenceId`, they must name the same Customer. A Customer with no reference takes `referenceId`, unless another Customer already has it, which fails with `409 Conflict`. A Customer with a different reference fails with `400 Bad Request` and code `CUSTOMER_REFERENCE_ID_MISMATCH`: change the reference by updating the Customer.
-        - With neither, a new Customer is created.
+        - With neither, a new Customer is created, unless `emailVerified` or `phoneVerified` find the Customer that already has that email or phone.
+
+        A verified email or phone binds the Payment to an existing Customer only when no Customer was found by `customerId` or `referenceId`. The email is tried first, then the phone. With a `referenceId` no Customer has yet, only a Customer without a reference is found, and it takes `referenceId`. The checkout of a Payment shows the saved payment methods and the credit of its Customer: declare a contact verified only when the customer proved it is theirs, for example by logging in with a confirmed email.
 
         It replaces the deprecated `customerEmail`, `customerFirstName`, `customerLastName` and `customerPhoneNumber`: do not send them together with it.
         When both are sent, whichever comes later in the body wins: `customer` replaces all of them, while each of them overwrites only its own field of `customer`.
@@ -3370,6 +3684,44 @@ components:
         phoneNumber:
           type: string
           description: The phone number of the customer associated with this Payment.
+          nullable: true
+        emailVerified:
+          type: boolean
+          description: Whether the customer proved that `email` is theirs. Requires `email`, or the request fails with code `CUSTOMER_EMAIL_REQUIRED`. Defaults to false.
+          default: false
+        phoneVerified:
+          type: boolean
+          description: Whether the customer proved that `phoneNumber` is theirs. Requires `phoneNumber`, or the request fails with code `CUSTOMER_PHONE_REQUIRED`. Defaults to false.
+          default: false
+      additionalProperties: false
+    CreatePaymentRequestCompany:
+      type: object
+      description: |
+        The Company of the customer, identified by your own company ID, so you never have to create it in advance or store its Voucherly ID.
+
+        The Payment looks for the Company with `referenceId`. When there is none, it creates one with `name` and `joinCode`. When there is one with a different `name`, it renames it: the name in your system wins.
+
+        The Customer of the Payment then joins the Company and stays in it, however it was found: a new Customer is created in it, and a Customer in another Company moves to it, as when a person changes employer in your system.
+
+        The same applies to `companyId`. You cannot specify both `company` and `companyId`.
+      nullable: true
+      required:
+        - referenceId
+        - name
+      properties:
+        referenceId:
+          type: string
+          description: The ID of the Company in your own system, unique per environment.
+          maxLength: 100
+          nullable: false
+        name:
+          type: string
+          description: The name of the Company. It renames the Company when it differs.
+          maxLength: 100
+          nullable: false
+        joinCode:
+          type: string
+          description: The 6-character code employees use to join the Company, used only when the Company is created. When it is missing, is not 6 characters long or another Company already has it, Voucherly generates one, so the Payment never fails because of it.
           nullable: true
       additionalProperties: false
     CreatePaymentRequestStore:
@@ -3522,6 +3874,12 @@ components:
           type: integer
           format: int32
           description: The quantity of this modifier.
+        modifiers:
+          type: array
+          description: Only on a dish chosen in a bundle group, the options picked from the dish's own groups, such as its size. Each one is charged at its own price on top of the bundle, and takes no options of its own.
+          items:
+            $ref: '#/components/schemas/Payments.PaymentLine.Modifier'
+          nullable: true
       additionalProperties: false
     Payments.Transaction:
       type: object
@@ -3810,6 +4168,10 @@ components:
         country:
           type: string
           description: The country code of the address (e.g., "IT" for Italy).
+          nullable: true
+        additionalInformation:
+          type: string
+          description: Flat, intercom and notes for the rider left on the last delivery to this address, at most 300 characters.
           nullable: true
       additionalProperties: false
     Customers.CustomerAddress.Request:
@@ -4680,6 +5042,31 @@ components:
         customerId:
           type: string
           description: The ID of the Customer that already has the email address or the reference.
+      additionalProperties: true
+    CompanyConflictProblemDetails:
+      properties:
+        type:
+          type: string
+          nullable: true
+          description: A URI reference that identifies the problem type.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type. It remains consistent across occurrences of the same error type.
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code generated by the origin server for this occurrence of the problem.
+          example: 409
+        detail:
+          type: string
+          nullable: true
+          description: A human-readable explanation specific to this occurrence of the problem.
+        code:
+          type: string
+          description: A short string indicating the conflict, to handle it programmatically.
+        companyId:
+          type: string
+          description: The ID of the Company that already has the join code or the reference.
       additionalProperties: true
   responses:
     BadRequest:

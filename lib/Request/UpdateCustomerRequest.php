@@ -40,6 +40,11 @@ class UpdateCustomerRequest extends VoucherlyObject
     public ?string $language;
 
     /**
+     * The Customer's date of birth, as `yyyy-MM-dd`. It can't be in the future or before 1900-01-01. Pass `null` to clear it.
+     */
+    public ?\DateTimeInterface $birthDate;
+
+    /**
      * The ID of the Company this Customer is associated with. Pass `null` to detach the Customer from its Company.
      */
     public ?string $companyId;
@@ -59,6 +64,7 @@ class UpdateCustomerRequest extends VoucherlyObject
     protected static function types(): array
     {
         return [
+            'birthDate' => 'date',
             'metadata' => 'map',
             'consents' => [ConsentRequest::class],
         ];

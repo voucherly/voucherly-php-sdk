@@ -2,7 +2,7 @@
 
 namespace VoucherlyApi\Model;
 
-use VoucherlyApi\Enum\DiscountType;
+use VoucherlyApi\Enum\DiscountLevel;
 use VoucherlyApi\VoucherlyObject;
 
 class PaymentDiscount extends VoucherlyObject
@@ -18,24 +18,15 @@ class PaymentDiscount extends VoucherlyObject
     public ?string $discountDescription;
 
     /**
-     * A non-negative integer in cents representing how much to subtract from the total. Must be specified when both `type` and `value` are null.
+     * `Line` when the discount is already in the `discountAmount` of the lines it applies to, `Subtotal` when it comes off the sum of the lines and leaves them as they are.
+     * One of the {@see DiscountLevel} constants.
+     */
+    public ?string $level;
+
+    /**
+     * In cents, what the discount is worth. A discount of `level` `Subtotal` comes off the sum of the lines; one of `level` `Line` is already in their `discountAmount` and is not taken off again.
      */
     public ?int $amount;
-
-    /**
-     * One of the {@see DiscountType} constants.
-     */
-    public ?string $type;
-
-    /**
-     * The value of the discount, contextual to the selected `type`. Must be specified when `type` is provided and `amount` is null.
-     */
-    public ?int $value;
-
-    /**
-     * Defines the application order of this discount relative to others.
-     */
-    public ?int $index;
 
     /**
      * Primary external reference for the discount, used by Voucherly to reconcile it across systems and to correctly compute reporting.
@@ -48,9 +39,14 @@ class PaymentDiscount extends VoucherlyObject
     public ?string $externalId2;
 
     /**
-     * The coupon code the payer entered to obtain this discount.
+     * The code of the Voucherly coupon that produced this discount, as passed in the `couponCode` of a discount of the request.
      */
     public ?string $couponCode;
+
+    /**
+     * The code of a promotion priced by the merchant's POS, such as one the customer entered at the table. Voucherly passes it back to the POS and does not validate it.
+     */
+    public ?string $externalCouponCode;
 
     /**
      * The loyalty points spent to obtain this discount.

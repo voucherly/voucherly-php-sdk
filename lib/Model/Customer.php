@@ -28,6 +28,13 @@ class Customer extends VoucherlyObject
     public ?string $created;
 
     /**
+     * The date and time the Customer registered on your website, in UTC, as you declared it with `registeredAt`. Null for the Customers not created through this API.
+     */
+    public ?string $registered;
+
+    public ?Origin $origin;
+
+    /**
      * The customer’s email address.
      */
     public ?string $email;
@@ -56,6 +63,11 @@ class Customer extends VoucherlyObject
      * The language the Customer is written to in, as an ISO 639-1 two-letter code.
      */
     public ?string $language;
+
+    /**
+     * The Customer's date of birth, as `yyyy-MM-dd`.
+     */
+    public ?string $birthDate;
 
     /**
      * The ID of the Company this Customer is associated with.
@@ -88,6 +100,7 @@ class Customer extends VoucherlyObject
     protected static function types(): array
     {
         return [
+            'origin' => Origin::class,
             'company' => Company::class,
             'packaging' => Packaging::class,
             'wallet' => CustomerWalletTotals::class,

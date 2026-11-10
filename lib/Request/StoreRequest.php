@@ -72,9 +72,14 @@ class StoreRequest extends VoucherlyObject
     public ?bool $ecommercePickupIsActive;
 
     /**
-     * Whether the Store accepts e-commerce reservations.
+     * Whether the Store uses reservations, both from the site and entered by the staff.
      */
-    public ?bool $ecommerceReservationIsActive;
+    public ?bool $reservationIsActive;
+
+    /**
+     * Whether the Store can be booked online, appearing in the Prenota section of the site.
+     */
+    public ?bool $reservationOnlineIsActive;
 
     protected static function types(): array
     {

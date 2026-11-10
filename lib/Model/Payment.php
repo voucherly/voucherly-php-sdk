@@ -109,7 +109,12 @@ class Payment extends VoucherlyObject
     public ?int $totalAmount;
 
     /**
-     * The total amount of discounts applied to the payment, in cents. This is the sum of all discount amounts.
+     * The sum of the lines after their own discounts, in cents. The discounts of `level` `Subtotal` come off it.
+     */
+    public ?int $subtotalAmount;
+
+    /**
+     * Every discount of the payment, in cents, on the lines and on the subtotal.
      */
     public ?int $discountAmount;
 
